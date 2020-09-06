@@ -17,7 +17,7 @@ public:
     }
 
 private:
-    char                    szConfigFileName[PATH_MAX];
+    string                  configFileName;
     map<string, string>     values;
     bool                    isConfigured = false;
 
@@ -27,6 +27,7 @@ public:
     ~ConfigManager() {}
 
     void                    initialise(char * pszConfigFileName);
+    void                    initialise(const char * pszConfigFileName);
     void                    readConfig();
 
     const char *            getValue(const char * key);

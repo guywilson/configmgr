@@ -9,18 +9,27 @@ extern "C" {
 #include <strutils.h>
 }
 
+#include <string>
 #include <map>
 #include <vector>
 
-#include <configmgr.h>
-#include <cfg_error.h>
+#include "configmgr.h"
+#include "cfg_error.h"
 
 
 using namespace std;
 
+
+void ConfigManager::initialise(const char * pszConfigFileName)
+{
+	this->configFileName.assign(pszConfigFileName);
+
+	readConfig();
+}
+
 void ConfigManager::initialise(char * pszConfigFileName)
 {
-    strcpy(this->szConfigFileName, pszConfigFileName);
+    this->configFileName.assign(pszConfigFileName);
 
     readConfig();
 }
@@ -46,11 +55,11 @@ void ConfigManager::readConfig()
     int             delimPos = 0;
 	const char *	delimiters = "\n\r";
 
-	fptr = fopen(szConfigFileName, "rt");
+	fptr = fopen(this->configFileName.c_str(), "rt");
 
 	if (fptr == NULL) {
-		syslog(LOG_ERR, "Failed to open config file %s with error %s", szConfigFileName, strerror(errno));
-		throw cfg_error(cfg_error::buildMsg("ERROR reading config file %s with error %s", szConfigFileName, strerror(errno)), __FILE__, __LINE__);
+		syslog(LOG_ERR, "Failed to open config file %s with error %s", configFileName.c_str(), strerror(errno));
+		throw cfg_error(cfg_error::buildMsg("ERROR reading config file %s with error %s", configFileName.c_str(), strerror(errno)), __FILE__, __LINE__);
 	}
 
     fseek(fptr, 0L, SEEK_END);
@@ -60,8 +69,8 @@ void ConfigManager::readConfig()
 	config = (char *)malloc(fileLength + 1);
 
 	if (config == NULL) {
-		syslog(LOG_ERR, "Failed to alocate %d bytes for config file %s", fileLength, szConfigFileName);
-		throw cfg_error(cfg_error::buildMsg("Failed to allocate %d bytes for config file %s", fileLength, szConfigFileName), __FILE__, __LINE__);
+		syslog(LOG_ERR, "Failed to alocate %d bytes for config file %s", fileLength, configFileName.c_str());
+		throw cfg_error(cfg_error::buildMsg("Failed to allocate %d bytes for config file %s", fileLength, configFileName.c_str()), __FILE__, __LINE__);
 	}
 
     /*
@@ -76,12 +85,12 @@ void ConfigManager::readConfig()
 	bytesRead = fread(config, 1, fileLength, fptr);
 
 	if (bytesRead != fileLength) {
-		syslog(LOG_ERR, "Read %d bytes, but config file %s is %d bytes long", bytesRead, szConfigFileName, fileLength);
+		syslog(LOG_ERR, "Read %d bytes, but config file %s is %d bytes long", bytesRead, configFileName.c_str(), fileLength);
 		throw cfg_error(
             cfg_error::buildMsg(
                 "Failed to read config file, read %d bytes, but config file %s is %d bytes long", 
                 bytesRead, 
-                szConfigFileName, 
+                configFileName.c_str(), 
                 fileLength), 
             __FILE__, 
             __LINE__);
